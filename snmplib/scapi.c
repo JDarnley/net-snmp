@@ -486,15 +486,10 @@ sc_hash(const oid * hashtype, size_t hashtypelen, const u_char * buf,
     }
 
 /** initialize the pointer */
-#ifdef HAVE_EVP_MD_CTX_CREATE
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
     cptr = EVP_MD_CTX_create();
 #else
-    cptr = malloc(sizeof(*cptr));
-#if defined(OLD_DES)
-    memset(cptr, 0, sizeof(*cptr));
-#else
-    EVP_MD_CTX_init(cptr);
-#endif
+    cptr = EVP_MD_CTX_new();
 #endif
     if (!EVP_DigestInit(cptr, hashfn)) {
         /* requested hash function is not available */
@@ -507,13 +502,11 @@ sc_hash(const oid * hashtype, size_t hashtypelen, const u_char * buf,
 /** do the final pass */
     EVP_DigestFinal(cptr, MAC, &tmp_len);
     *MAC_len = tmp_len;
-#ifdef HAVE_EVP_MD_CTX_DESTROY
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
     EVP_MD_CTX_destroy(cptr);
 #else
-#if !defined(OLD_DES)
-    EVP_MD_CTX_cleanup(cptr);
-#endif
-    free(cptr);
+    EVP_MD_CTX_free(cptr);
 #endif
     return (rval);
 

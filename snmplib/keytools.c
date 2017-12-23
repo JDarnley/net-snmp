@@ -149,13 +149,13 @@ generate_Ku(const oid * hashtype, u_int hashtype_len,
      */
 #ifdef NETSNMP_USE_OPENSSL
 
-#ifdef HAVE_EVP_MD_CTX_CREATE
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
     ctx = EVP_MD_CTX_create();
 #else
-    ctx = malloc(sizeof(*ctx));
-    if (!EVP_MD_CTX_init(ctx))
-        return SNMPERR_GENERR;
+    ctx = EVP_MD_CTX_new();
 #endif
+    if (!ctx)
+        return SNMPERR_GENERR;
 #ifndef NETSNMP_DISABLE_MD5
     if (ISTRANSFORM(hashtype, HMACMD5Auth)) {
         if (!EVP_DigestInit(ctx, EVP_md5()))
@@ -259,11 +259,10 @@ generate_Ku(const oid * hashtype, u_int hashtype_len,
     memset(buf, 0, sizeof(buf));
 #ifdef NETSNMP_USE_OPENSSL
     if (ctx) {
-#ifdef HAVE_EVP_MD_CTX_DESTROY
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
         EVP_MD_CTX_destroy(ctx);
 #else
-        EVP_MD_CTX_cleanup(ctx);
-        free(ctx);
+        EVP_MD_CTX_free(ctx);
 #endif
     }
 #endif
