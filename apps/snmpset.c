@@ -179,6 +179,7 @@ main(int argc, char *argv[])
             case 'x':
             case 'd':
             case 'b':
+            case 'n': /* undocumented */
 #ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
             case 'I':
             case 'U':
